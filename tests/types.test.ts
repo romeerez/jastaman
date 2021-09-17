@@ -2,66 +2,63 @@ import {
   createStore,
   Destroy,
   EqualityChecker,
-  PartialState, PickData,
+  PartialState,
   SetState,
   StateListener,
   StateSelector, Store,
-  StoreApi,
   Subscribe,
 } from '../src/index'
 
 it('can use exposed types', () => {
   interface ExampleState {
-    num: number
-    numGet: () => number
-    numGetState: () => number
-    numSet: (v: number) => void
-    numSetState: (v: number) => void
+    a: number
+    b: number
+    c: number
   }
 
   const listener: StateListener<ExampleState> = (state) => {
-    console.log(state.num)
+    console.log(state.a)
   }
 
-  const selector: StateSelector<ExampleState, number> = (state) => state.num
+  const selector: StateSelector<ExampleState, number> = (state) => state.a
 
-  const partial: PartialState<ExampleState, 'num' | 'numGet'> = {
-    num: 2,
-    numGet: () => 2,
+  const partial: PartialState<ExampleState, 'a' | 'b'> = {
+    a: 1,
+    b: 2,
   }
 
-  const partialFn: PartialState<ExampleState, 'num' | 'numGet'> = (state) => ({
+  const partialFn: PartialState<ExampleState, 'a' | 'b'> = (state) => ({
     ...state,
-    num: 2,
+    a: 2
   })
 
   const equalityFn: EqualityChecker<ExampleState> = (state, newState) =>
     state !== newState
 
-  const store: Store<ExampleState> = createStore({
-    num: 1,
-    numGet: () => store.state.num,
+  const store = createStore({
+    state: {
+      a: 1,
+      b: 2,
+      c: 3
+    },
+    numGet: () => store.state.a,
     numGetState: () => {
       // TypeScript can't get the type of storeApi when it trys to enforce the signature of numGetState.
       // Need to explicitly state the type of storeApi.getState().num or storeApi type will be type 'any'.
-      const result: number = store.state.num
+      const result: number = store.state.b
       return result
     },
-    numSet: (v) => {
-      store.set({ num: v })
-    },
-    numSetState: (v) => {
-      store.set({ num: v })
-    },
+    numSet: (a: number) => store.set({ a }),
+    numSetState: (a: number) => store.set({ a })
   })
 
   function checkAllTypes(
-    _state: PickData<ExampleState>,
-    _partialState: PartialState<ExampleState, 'num' | 'numGet'>,
-    _setState: SetState<PickData<ExampleState>>,
+    _state: ExampleState,
+    _partialState: PartialState<ExampleState, 'a' | 'b'>,
+    _setState: SetState<ExampleState>,
     _stateListener: StateListener<ExampleState>,
     _stateSelector: StateSelector<ExampleState, number>,
-    _store: Store<ExampleState>,
+    _store: Store<{ state: ExampleState }>,
     _subscribe: Subscribe<ExampleState>,
     _destroy: Destroy,
     _equalityFn: EqualityChecker<ExampleState>,
@@ -92,7 +89,9 @@ it('should have correct (partial) types for set', () => {
   type Count = { count: number }
 
   const store = createStore({
-    count: 0,
+    state: {
+      count: 0,
+    },
     // @ts-expect-error we shouldn't be able to set count to undefined
     a: () => store.set(() => ({ count: undefined })),
     // @ts-expect-error we shouldn't be able to set count to undefined
@@ -100,7 +99,7 @@ it('should have correct (partial) types for set', () => {
     c: () => store.set({ count: 1 }),
   })
 
-  const set: AssertEqual<typeof store.set, SetState<PickData<Count>>> = true
+  const set: AssertEqual<typeof store.set, SetState<Count>> = true
   expect(set).toEqual(true)
 
   // ok, should not error
@@ -119,8 +118,10 @@ it('should allow for different partial keys to be returnable from set', () => {
   type State = { count: number; something: string }
 
   const store = createStore({
-    count: 0,
-    something: 'foo',
+    state: {
+      count: 0,
+      something: 'foo',
+    }
   })
 
   const set: AssertEqual<typeof store.set, SetState<State>> = true

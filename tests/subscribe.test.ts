@@ -4,7 +4,7 @@ describe('subscribe()', () => {
   it('should be called if new state identity is different', () => {
     const spy = jest.fn()
     const initialState = { value: 1, other: 'a' }
-    const store = createStore(initialState)
+    const store = createStore({ state: initialState })
 
     store.subscribe(spy)
     store.set({ ...store.state })
@@ -14,7 +14,7 @@ describe('subscribe()', () => {
   it('should not be called when state slice is the same', () => {
     const spy = jest.fn()
     const initialState = { value: 1, other: 'a' }
-    const store = createStore(initialState)
+    const store = createStore({ state: initialState })
 
     store.subscribe((s) => s.value, spy)
     store.set({ other: 'b' })
@@ -24,7 +24,7 @@ describe('subscribe()', () => {
   it('should be called when state slice changes', () => {
     const spy = jest.fn()
     const initialState = { value: 1, other: 'a' }
-    const store = createStore(initialState)
+    const store = createStore({ state: initialState })
 
     store.subscribe((s) => s.value, spy)
     store.set({ value: initialState.value + 1 })
@@ -35,7 +35,7 @@ describe('subscribe()', () => {
   it('should not be called when equality checker returns true', () => {
     const spy = jest.fn()
     const initialState = { value: 1, other: 'a' }
-    const store = createStore(initialState)
+    const store = createStore({ state: initialState })
 
     store.subscribe((state) => state, () => true, spy)
     store.set({ value: initialState.value + 2 })
@@ -45,7 +45,7 @@ describe('subscribe()', () => {
   it('should be called when equality checker returns false', () => {
     const spy = jest.fn()
     const initialState = { value: 1, other: 'a' }
-    const store = createStore(initialState)
+    const store = createStore({ state: initialState })
 
     store.subscribe(
       (s) => s.value,
@@ -60,7 +60,7 @@ describe('subscribe()', () => {
   it('should unsubscribe correctly', () => {
     const spy = jest.fn()
     const initialState = { value: 1, other: 'a' }
-    const store = createStore(initialState)
+    const store = createStore({ state: initialState })
 
     const unsub = store.subscribe((s) => s.value, spy)
 
@@ -75,7 +75,7 @@ describe('subscribe()', () => {
   it('should keep consistent behavior with equality check', () => {
     const spy = jest.fn()
     const initialState = { value: 1, other: 'a' }
-    const store = createStore(initialState)
+    const store = createStore({ state: initialState })
 
     const isRoughEqual = (x: number, y: number) => Math.abs(x - y) < 1
     store.set({ value: 0 })

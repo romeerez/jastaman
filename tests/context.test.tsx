@@ -11,10 +11,10 @@ type CounterState = {
 it('creates and uses context store', async () => {
   const { Provider, useStore } = createContext(() => {
     const store = createStore({
-      count: 0,
-      inc() {
-        store.set((state) => ({ count: state.count + 1 }))
+      state: {
+        count: 0,
       },
+      inc: () => store.set((state) => ({ count: state.count + 1 }))
     })
     return store
   })
@@ -38,10 +38,10 @@ it('creates and uses context store', async () => {
 it('uses context store api', async () => {
   const { Provider, useStore } = createContext(() => {
     const store = createStore({
-      count: 0,
-      inc() {
-        store.set((state) => ({ count: state.count + 1 }))
+      state: {
+        count: 0,
       },
+      inc: () => store.set((state) => ({ count: state.count + 1 }))
     })
     return store
   })
@@ -98,7 +98,7 @@ it('throws error when not using provider', async () => {
     }
   }
 
-  const { useStore } = createContext(() => createStore({}))
+  const { useStore } = createContext(() => createStore({ state: {} }))
   function Component() {
     useStore()
     return <div>no error</div>

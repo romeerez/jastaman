@@ -1,17 +1,17 @@
 import { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react'
-import { PickData, StoreApi, EqualityChecker, createStore as vanillaCreateStore } from './vanilla'
+import { StoreApi, EqualityChecker, createStore as vanillaCreateStore, StoreCreator } from './vanilla'
 import shallowEqual from './shallow'
 
 export * from './vanilla'
 
-export type Use<T extends object> = <Slice>(
-  selector: (state: PickData<T>) => Slice,
+export type Use<State extends object> = <Slice>(
+  selector: (state: State) => Slice,
   deps?: ReadonlyArray<any>,
   equalityFn?: EqualityChecker<Slice>
 ) => Slice
 
-export type Store<T extends object> = StoreApi<T> & {
-  use: Use<T>
+export type Store<T extends StoreCreator> = StoreApi<T> & {
+  use: Use<T['state']>
 }
 
 // For server-side rendering: https://github.com/pmndrs/zustand/pull/34
@@ -23,12 +23,12 @@ const isSSR =
 
 const useIsomorphicLayoutEffect = isSSR ? useEffect : useLayoutEffect
 
-export const createStore = <T extends object>(
+export const createStore = <T extends StoreCreator>(
   dataAndMethods: T
 ): Store<T> => {
-  type State = PickData<T>
+  type State = T['state']
 
-  const store = vanillaCreateStore(dataAndMethods) as unknown as Store<T>
+  const store = vanillaCreateStore(dataAndMethods) as Store<T>
 
   store.use = (selector, deps = [], equalityFn = Object.is) => {
     const [, forceUpdate] = useReducer((c) => c + 1, 0)

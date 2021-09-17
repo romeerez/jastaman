@@ -10,10 +10,10 @@ import { createStore, EqualityChecker, StateSelector, SetState } from '../src/in
 
 it('uses the store', async () => {
   const store = createStore({
-    count: 0,
-    inc() {
-      store.set((state) => ({ count: state.count + 1 }))
-    }
+    state: {
+      count: 0,
+    },
+    inc: () => store.set((state) => ({ count: state.count + 1 }))
   })
 
   function Counter() {
@@ -28,7 +28,7 @@ it('uses the store', async () => {
 })
 
 it('uses the store with a selector and equality checker', async () => {
-  const store = createStore({ item: { value: 0 } })
+  const store = createStore({ state: { item: { value: 0 } } })
   let renderCount = 0
 
   function Component() {
@@ -60,10 +60,10 @@ it('uses the store with a selector and equality checker', async () => {
 
 it('only re-renders if selected state has changed', async () => {
   const store = createStore({
-    count: 0,
-    inc() {
-      store.set((state) => ({ count: state.count + 1 }))
+    state: {
+      count: 0
     },
+    inc: () => store.set((state) => ({ count: state.count + 1 }))
   })
   let counterRenderCount = 0
   let controlRenderCount = 0
@@ -95,7 +95,7 @@ it('only re-renders if selected state has changed', async () => {
 })
 
 it('re-renders with useLayoutEffect', async () => {
-  const store = createStore({ state: false })
+  const store = createStore({ state: { state: false } })
 
   function Component() {
     const state = store.use(state => state.state)
@@ -113,7 +113,9 @@ it('re-renders with useLayoutEffect', async () => {
 
 it('can batch updates', async () => {
   const store = createStore({
-    count: 0,
+    state: {
+      count: 0,
+    },
     inc() {
       store.set((state) => ({ count: state.count + 1 }))
     },
@@ -139,8 +141,10 @@ it('can update the selector', async () => {
   type State = { one: string; two: string }
   type Props = { selector: StateSelector<State, string> }
   const store = createStore({
-    one: 'one',
-    two: 'two',
+    state: {
+      one: 'one',
+      two: 'two',
+    }
   })
 
   function Component({ selector }: Props) {
@@ -157,7 +161,7 @@ it('can update the selector', async () => {
 it('can update the equality checker', async () => {
   type State = { value: number }
   type Props = { equalityFn: EqualityChecker<number> }
-  const store = createStore<State>({ value: 0 })
+  const store = createStore<{ state: State }>({ state: { value: 0 } })
   const selector: StateSelector<State, number> = (s) => s.value
 
   let renderCount = 0
@@ -196,7 +200,7 @@ it('can call store.use with progressively more arguments', async () => {
     equalityFn?: EqualityChecker<number>
   }
 
-  const store = createStore<State>({ value: 0 })
+  const store = createStore<{ state: State }>({ state: { value: 0 } })
 
   let renderCount = 0
   function Component({ selector, equalityFn }: Props) {
@@ -233,7 +237,7 @@ it('can throw an error in selector', async () => {
   console.error = jest.fn()
   type State = { value?: string }
 
-  const store = createStore<State>({ value: 'foo' })
+  const store = createStore<{ state: State }>({ state: { value: 'foo' } })
   const selector: StateSelector<State, string | void> = (s) =>
     // @ts-expect-error This function is supposed to throw an error
     s.value.toUpperCase()
@@ -273,7 +277,7 @@ it('can throw an error in equality checker', async () => {
   console.error = jest.fn()
   type State = { value?: string }
 
-  const store = createStore<State>({ value: 'foo' })
+  const store = createStore<{ state: State }>({ state: { value: 'foo' } })
   const selector: StateSelector<State, State> = (s) => s
   const equalityFn: EqualityChecker<State> = (a, b) =>
     // @ts-expect-error This function is supposed to throw an error
@@ -312,7 +316,9 @@ it('can throw an error in equality checker', async () => {
 
 it('can get the state', () => {
   const store = createStore({
-    value: 1,
+    state: {
+      value: 1,
+    },
     getState: () => store.state,
   })
 
@@ -322,12 +328,16 @@ it('can get the state', () => {
 
 it('can set the state', () => {
   type State = {
-    value: number
-    setState: SetState<Pick<State, 'value'>>
+    state: {
+      value: number
+    }
+    setState: SetState<State['state']>
   }
 
   const { set, setState, state } = createStore<State>({
-    value: 1,
+    state: {
+      value: 1,
+    },
     setState(v) {
       set(v)
     },
@@ -340,8 +350,8 @@ it('can set the state', () => {
 })
 
 it('can set the store without merging', () => {
-  const { replace, state } = createStore<{ a?: number, b?: number }>({
-    a: 1,
+  const { replace, state } = createStore<{ state: { a?: number, b?: number } }>({
+    state: { a: 1 },
   })
 
   // Should override the state instead of merging.
@@ -351,7 +361,9 @@ it('can set the store without merging', () => {
 
 it('can destroy the store', () => {
   const store = createStore({
-    value: 1,
+    state: {
+      value: 1,
+    }
   })
 
   store.subscribe(() => {
@@ -365,7 +377,7 @@ it('can destroy the store', () => {
 
 it('only calls selectors when necessary', async () => {
   type State = { a: number; b: number }
-  const store = createStore<State>({ a: 0, b: 0 })
+  const store = createStore<{ state: State }>({ state: { a: 0, b: 0 } })
   let inlineSelectorCallCount = 0
   let staticSelectorCallCount = 0
 
@@ -404,11 +416,13 @@ it('ensures parent components subscribe before children', async () => {
     children: { [key: string]: { text: string } }
   }
   type Props = { id: string }
-  const store = createStore<State>({
-    children: {
-      '1': { text: 'child 1' },
-      '2': { text: 'child 2' },
-    },
+  const store = createStore<{ state: State }>({
+    state: {
+      children: {
+        '1': { text: 'child 1' },
+        '2': { text: 'child 2' },
+      },
+    }
   })
 
   function changeState() {
@@ -445,7 +459,7 @@ it('ensures parent components subscribe before children', async () => {
 
 // https://github.com/pmndrs/zustand/issues/84
 it('ensures the correct subscriber is removed on unmount', async () => {
-  const store = createStore({ count: 0 })
+  const store = createStore({ state: { count: 0 } })
 
   function increment() {
     store.set(({ count }) => ({ count: count + 1 }))
@@ -485,7 +499,7 @@ it('ensures the correct subscriber is removed on unmount', async () => {
 
 // https://github.com/pmndrs/zustand/issues/86
 it('ensures a subscriber is not mistakenly overwritten', async () => {
-  const store = createStore({ count: 0 })
+  const store = createStore({ state: { count: 0 } })
 
   function Count1() {
     const c = store.use((s) => s.count)

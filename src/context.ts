@@ -3,11 +3,11 @@ import {
   useContext,
   ReactNode,
 } from 'react'
-import { Store } from './index'
+import { Store, StoreCreator } from './index'
 
 type Provider<Arg> = (props: Arg & { children?: ReactNode }) => JSX.Element
 
-export default function createContext<T extends object, Arg extends object>(
+export default function createContext<T extends StoreCreator, Arg extends object>(
   createStore: (props: Arg) => Store<T>
 ): { Provider: Provider<Arg>, useStore(): Store<T> } {
   const context = reactCreateContext(undefined as unknown as Store<T>)

@@ -1,3 +1,7 @@
+export type StoreCreator = {
+  state: object
+}
+
 // types inspired by setState from React, see:
 // https://github.com/DefinitelyTyped/DefinitelyTyped/blob/6c49e45842358ba59a508e13130791989911430d/types/react/v16/index.d.ts#L489-L495
 // this hacky code is needed for type checking set({ value: undefined }), which is allowed with Partial, but should not be
@@ -21,10 +25,10 @@ export type SetState<T extends object> = {
 }
 
 export type ReplaceState<T extends object> = (
-  state: PickData<T> | ((prevState: PickData<T>) => PickData<T>),
+  state: T | ((prevState: T) => T),
 ) => void;
 
-export type StateListener<T extends object> = (state: PickData<T>, previousState: PickData<T>) => void
+export type StateListener<T extends object> = (state: T, previousState: T) => void
 
 export type StateSliceListener<T> = (slice: T, previousSlice: T) => void
 
@@ -43,55 +47,47 @@ export interface Subscribe<T extends object> {
 
 export type Destroy = () => void
 
-export type StateSelector<T extends object, U> = (state: PickData<T>) => U
+export type StateSelector<T extends object, U> = (state: T) => U
 
 export type EqualityChecker<T> = (state: T, newState: T) => boolean
 
-type KeysOfType<Record, Type> = {
-  [Key in keyof Record]: Record[Key] extends Type ? Key : never;
-}[keyof Record];
-
-export type PickData<T extends object> = Omit<T, KeysOfType<T, Function>>
-
-export type PickMethods<T extends object> = Pick<T, KeysOfType<T, Function>>
-
-export type StoreApi<T extends object> = {
-  set: SetState<PickData<T>>
-  replace: ReplaceState<T>
-  state: PickData<T>
-  prevState: PickData<T>
-  subscribe: Subscribe<T>
+export type StoreApi<T extends StoreCreator> = {
+  set: SetState<T['state']>
+  replace: ReplaceState<T['state']>
+  state: T['state']
+  prevState: T['state']
+  subscribe: Subscribe<T['state']>
   destroy: Destroy
-} & PickMethods<T>
+} & Omit<T, 'state'>
 
-export const createStore = <T extends object>(
-  dataAndMethods: T
+export const createStore = <T extends StoreCreator>(
+  storeCreator: T
 ): StoreApi<T> => {
-  type State = PickData<T>
+  type State = T['state']
 
-  const state = {} as State;
-  const listeners: Set<StateListener<T>> = new Set()
+  const state: State = { ...storeCreator.state }
+  const listeners: Set<StateListener<State>> = new Set()
 
-  const set: SetState<T> = (newState) => {
-    if (typeof newState === 'function') newState = newState(state as T)
+  const set: SetState<State> = (newState) => {
+    if (typeof newState === 'function') newState = newState(state)
 
     store.prevState = { ...state }
     Object.assign(state, newState);
     listeners.forEach((listener) => listener(state, store.prevState))
   }
 
-  const replace: ReplaceState<T> = (newState) => {
+  const replace: ReplaceState<State> = (newState) => {
     if (typeof newState === 'function') newState = newState(state);
 
     for (const key in state) {
-      delete state[key as keyof PickData<T>];
+      delete state[key];
     }
 
     set(newState)
   }
 
   const subscribeWithSelector = <U>(
-    selector: StateSelector<T, U>,
+    selector: StateSelector<State, U>,
     equalityFn: EqualityChecker<U>,
     listener: StateSliceListener<U>
   ) => {
@@ -109,13 +105,13 @@ export const createStore = <T extends object>(
   }
 
   const subscribe = <U>(
-    listenerOrSelector: StateListener<T> | StateSelector<T, U>,
-    listenerOrEqualityFn?: StateListener<T> | StateSliceListener<U> | EqualityChecker<U>,
+    listenerOrSelector: StateListener<State> | StateSelector<State, U>,
+    listenerOrEqualityFn?: StateListener<State> | StateSliceListener<U> | EqualityChecker<U>,
     sliceListener?: StateSliceListener<U>
   ) => {
     if (sliceListener) {
       return subscribeWithSelector(
-        listenerOrSelector as StateSelector<T, U>,
+        listenerOrSelector as StateSelector<State, U>,
         listenerOrEqualityFn as EqualityChecker<U>,
         sliceListener,
       )
@@ -123,36 +119,26 @@ export const createStore = <T extends object>(
 
     if (listenerOrEqualityFn) {
       return subscribeWithSelector(
-        listenerOrSelector as StateSelector<T, U>,
+        listenerOrSelector as StateSelector<State, U>,
         Object.is,
         listenerOrEqualityFn as StateSliceListener<U>,
       )
     }
 
-    listeners.add(listenerOrSelector as StateListener<T>)
-    return () => listeners.delete(listenerOrSelector as StateListener<T>)
+    listeners.add(listenerOrSelector as StateListener<State>)
+    return () => listeners.delete(listenerOrSelector as StateListener<State>)
   }
 
   const destroy: Destroy = () => listeners.clear()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const store: any = {
+  const store = {
+    ...storeCreator,
     state,
     prevState: state,
     set,
     replace,
     subscribe,
     destroy
-  }
-
-  for (const key in dataAndMethods) {
-    const value = dataAndMethods[key];
-    if (typeof value === 'function') {
-      (store)[key] = value
-    } else {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (state as any)[key] = value;
-    }
   }
 
   return store
