@@ -1,6 +1,5 @@
 {
   "name": "jastaman",
-  "private": true,
   "version": "0.0.1",
   "description": "React state manager",
   "main": "./index.js",
