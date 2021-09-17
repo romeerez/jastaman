@@ -2,8 +2,8 @@
   "name": "jastaman",
   "version": "0.0.1",
   "description": "React state manager",
-  "main": "./index.js",
-  "types": "./index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "**"
   ],
