@@ -1,0 +1,157 @@
+{
+  "name": "jastaman",
+  "private": true,
+  "version": "0.0.1",
+  "description": "React state manager",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "files": [
+    "**"
+  ],
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./index.d.ts",
+      "module": "./esm/index.js",
+      "import": "./esm/index.mjs",
+      "default": "./index.js"
+    },
+    "./vanilla": {
+      "types": "./vanilla.d.ts",
+      "module": "./esm/vanilla.js",
+      "import": "./esm/vanilla.mjs",
+      "default": "./vanilla.js"
+    },
+    "./shallow": {
+      "types": "./shallow.d.ts",
+      "module": "./esm/shallow.js",
+      "import": "./esm/shallow.mjs",
+      "default": "./shallow.js"
+    },
+    "./context": {
+      "types": "./context.d.ts",
+      "module": "./esm/context.js",
+      "import": "./esm/context.mjs",
+      "default": "./context.js"
+    }
+  },
+  "sideEffects": false,
+  "scripts": {
+    "prebuild": "shx rm -rf dist",
+    "build": "concurrently 'yarn:build:*'",
+    "build:base": "rollup -c",
+    "build:vanilla": "rollup -c --config-vanilla",
+    "build:middleware": "rollup -c --config-middleware",
+    "build:shallow": "rollup -c --config-shallow",
+    "build:context": "rollup -c --config-context",
+    "postbuild": "yarn copy",
+    "eslint": "eslint --fix '*.{js,json}' '{src,tests}/**/*.{ts,tsx}'",
+    "eslint:ci": "eslint '*.{js,json}' '{src,tests}/**/*.{ts,tsx}'",
+    "prepare": "yarn build",
+    "pretest": "tsc --noEmit",
+    "test": "jest",
+    "test:dev": "jest --watch --no-coverage",
+    "test:coverage:watch": "jest --watch",
+    "copy": "shx cp -r dist/src/* dist/esm && shx mv dist/src/* dist && shx rm -rf dist/{src,tests} && shx cp package.json readme.md LICENSE dist && json -I -f dist/package.json -e \"this.private=false; this.devDependencies=undefined; this.optionalDependencies=undefined; this.scripts=undefined; this.prettier=undefined; this.jest=undefined; this['lint-staged']=undefined;\""
+  },
+  "prettier": {
+    "semi": false,
+    "trailingComma": "es5",
+    "singleQuote": true,
+    "jsxBracketSameLine": true,
+    "tabWidth": 2,
+    "printWidth": 80
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx}": [
+      "prettier --write"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/romeerez/jastaman"
+  },
+  "keywords": [
+    "react",
+    "state",
+    "manager",
+    "management",
+    "store"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/romeerez/jastaman"
+  },
+  "homepage": "https://github.com/romeerez/jastaman",
+  "jest": {
+    "rootDir": ".",
+    "testEnvironment": "jsdom",
+    "moduleNameMapper": {
+      "^zustand$": "<rootDir>/src/index.ts"
+    },
+    "modulePathIgnorePatterns": [
+      "dist"
+    ],
+    "testRegex": "test.(js|ts|tsx)$",
+    "coverageDirectory": "./coverage/",
+    "collectCoverage": true,
+    "coverageReporters": [
+      "json",
+      "html",
+      "text",
+      "text-summary"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.{js,ts,tsx}",
+      "tests/**/*.{js,ts,tsx}"
+    ]
+  },
+  "devDependencies": {
+    "@babel/core": "^7.15.0",
+    "@babel/plugin-external-helpers": "^7.14.5",
+    "@babel/plugin-transform-react-jsx": "^7.14.9",
+    "@babel/plugin-transform-runtime": "^7.15.0",
+    "@babel/plugin-transform-typescript": "^7.15.0",
+    "@babel/preset-env": "^7.15.0",
+    "@rollup/plugin-babel": "^5.3.0",
+    "@rollup/plugin-node-resolve": "^13.0.4",
+    "@rollup/plugin-typescript": "^8.2.5",
+    "@testing-library/react": "^12.0.0",
+    "@types/jest": "^27.0.1",
+    "@types/react": "^17.0.19",
+    "@types/react-dom": "^17.0.9",
+    "@typescript-eslint/eslint-plugin": "^4.29.3",
+    "@typescript-eslint/parser": "^4.29.3",
+    "concurrently": "^6.2.1",
+    "esbuild": "^0.12.23",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-import-resolver-alias": "^1.1.2",
+    "eslint-plugin-import": "^2.24.2",
+    "eslint-plugin-jest": "^24.4.0",
+    "eslint-plugin-prettier": "^3.4.1",
+    "eslint-plugin-react": "^7.24.0",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "husky": "^7.0.2",
+    "immer": "^9.0.5",
+    "jest": "^27.0.6",
+    "json": "^11.0.0",
+    "lint-staged": "^11.1.2",
+    "prettier": "^2.3.2",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "rollup": "^2.56.3",
+    "rollup-plugin-esbuild": "^4.5.0",
+    "rollup-plugin-size-snapshot": "^0.12.0",
+    "shx": "^0.3.3",
+    "typescript": "^4.4.3"
+  },
+  "peerDependencies": {
+    "react": ">=16.8"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  }
+}
