@@ -1,71 +1,26 @@
-export type StoreCreator = {
-  state: object
+import {
+  StoreCreator,
+  Params,
+  StoreApi,
+  StateListener,
+  StateSliceListener,
+  StateSelector,
+  SetState,
+  ReplaceState,
+  EqualityChecker,
+  Destroy,
+} from "./types"
+
+import shallowEqual from './shallow'
+
+export const computed = <T>(): T => {
+  return undefined as unknown as T
 }
 
-// types inspired by setState from React, see:
-// https://github.com/DefinitelyTyped/DefinitelyTyped/blob/6c49e45842358ba59a508e13130791989911430d/types/react/v16/index.d.ts#L489-L495
-// this hacky code is needed for type checking set({ value: undefined }), which is allowed with Partial, but should not be
-export type PartialState<
-  T extends object,
-  K1 extends keyof T = keyof T,
-  K2 extends keyof T = K1,
-  K3 extends keyof T = K2,
-  K4 extends keyof T = K3
-  > =
-  | (Pick<T, K1> | Pick<T, K2> | Pick<T, K3> | Pick<T, K4> | T)
-  | ((state: T) => Pick<T, K1> | Pick<T, K2> | Pick<T, K3> | Pick<T, K4> | T)
-
-export type SetState<T extends object> = {
-  <
-    K1 extends keyof T,
-    K2 extends keyof T = K1,
-    K3 extends keyof T = K2,
-    K4 extends keyof T = K3
-  >(partial: PartialState<T, K1, K2, K3, K4>): void
-}
-
-export type ReplaceState<T extends object> = (
-  state: T | ((prevState: T) => T),
-) => void;
-
-export type StateListener<T extends object> = (state: T, previousState: T) => void
-
-export type StateSliceListener<T> = (slice: T, previousSlice: T) => void
-
-export interface Subscribe<T extends object> {
-  (listener: StateListener<T>): () => void
-  <U>(
-    selector: StateSelector<T, U>,
-    listener: StateSliceListener<U>,
-  ): () => void
-  <U>(
-    selector: StateSelector<T, U>,
-    equalityFn: EqualityChecker<U>,
-    listener: StateSliceListener<U>,
-  ): () => void
-}
-
-export type Destroy = () => void
-
-export type StateSelector<T extends object, U> = (state: T) => U
-
-export type EqualityChecker<T> = (state: T, newState: T) => boolean
-
-export type StoreApi<T extends StoreCreator> = {
-  set: SetState<T['state']>
-  replace: ReplaceState<T['state']>
-  state: T['state']
-  prevState: T['state']
-  subscribe: Subscribe<T['state']>
-  destroy: Destroy
-} & Omit<T, 'state'>
-
-export const createStore = <T extends StoreCreator>(
-  storeCreator: T
-): StoreApi<T> => {
-  type State = T['state']
-
-  const state: State = { ...storeCreator.state }
+export const createStore = <T extends StoreCreator, State extends T['state'] = T['state']>(
+  params: Params<T, State>
+): StoreApi<T, State> => {
+  const state: State = { ...params.state }
   const listeners: Set<StateListener<State>> = new Set()
 
   const set: SetState<State> = (newState) => {
@@ -130,9 +85,29 @@ export const createStore = <T extends StoreCreator>(
   }
 
   const destroy: Destroy = () => listeners.clear()
+  
+  const { computed } = params
+  for (let key in computed) {
+    const [selector, computor] = computed[key] as [
+      (state: State, prevState: State) => unknown,
+      (state: State, prevState: State) => State[typeof key]
+    ]
+    
+    let prevSelected = computor(state, state)
+    state[key] = prevSelected
+    const listener = (state: State, prevState: State) => {
+      const selected = selector(state, prevState)
+      if (!shallowEqual(selected, prevSelected)) {
+        prevSelected = selected as State[typeof key]
+        state[key] = computor(state, prevState)
+      }
+    }
+    
+    listeners.add(listener)
+  }
 
   const store = {
-    ...storeCreator,
+    ...params,
     state,
     prevState: state,
     set,
@@ -140,6 +115,6 @@ export const createStore = <T extends StoreCreator>(
     subscribe,
     destroy
   }
-
+  
   return store
 }
