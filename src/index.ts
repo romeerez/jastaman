@@ -11,6 +11,7 @@ import shallowEqual from './shallow'
 import {
   EqualityChecker,
   Params,
+  PartialState,
   StateListener,
   StateSelector,
   StateSliceListener,
@@ -168,16 +169,18 @@ export const useCreateStore = <
   T extends StoreCreator,
   State extends T['state'] = T['state']
 >(
-  data: T,
+  data: () => Params<T, State>,
   options?: {
     setOnChange?: Partial<State>
   }
 ) => {
-  const store = useMemo(() => createStore(data), [])
+  const store = useMemo(() => createStore(data()), [])
 
   useEffect(
     () => {
-      if (options?.setOnChange) store.set(options.setOnChange)
+      if (options?.setOnChange) {
+        store.set(options.setOnChange as PartialState<State>)
+      }
     },
     options?.setOnChange ? Object.values(options.setOnChange) : []
   )

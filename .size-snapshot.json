@@ -84,9 +84,9 @@
     }
   },
   "index.js": {
-    "bundled": 6707,
-    "minified": 3308,
-    "gzipped": 1325,
+    "bundled": 6720,
+    "minified": 3325,
+    "gzipped": 1330,
     "treeshaked": {
       "rollup": {
         "code": 161,
@@ -98,9 +98,9 @@
     }
   },
   "index.mjs": {
-    "bundled": 6707,
-    "minified": 3308,
-    "gzipped": 1325,
+    "bundled": 6720,
+    "minified": 3325,
+    "gzipped": 1330,
     "treeshaked": {
       "rollup": {
         "code": 161,
