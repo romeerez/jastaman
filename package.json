@@ -3,35 +3,32 @@
   "version": "0.0.3",
   "description": "React state manager",
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "**"
-  ],
+  "types": "./dist/src/index.d.ts",
+  "files": ["./dist"],
   "exports": {
-    "./package.json": "./package.json",
     ".": {
-      "types": "./index.d.ts",
-      "module": "./esm/index.js",
-      "import": "./esm/index.mjs",
-      "default": "./index.js"
+      "types": "./dist/src/index.d.ts",
+      "module": "./dist/esm/index.js",
+      "import": "./dist/esm/index.mjs",
+      "default": "./dist/index.js"
     },
     "./vanilla": {
-      "types": "./vanilla.d.ts",
-      "module": "./esm/vanilla.js",
-      "import": "./esm/vanilla.mjs",
-      "default": "./vanilla.js"
+      "types": "./dist/src/vanilla.d.ts",
+      "module": "./dist/esm/vanilla.js",
+      "import": "./dist/esm/vanilla.mjs",
+      "default": "./dist/vanilla.js"
     },
     "./shallow": {
-      "types": "./shallow.d.ts",
-      "module": "./esm/shallow.js",
-      "import": "./esm/shallow.mjs",
-      "default": "./shallow.js"
+      "types": "./dist/src/shallow.d.ts",
+      "module": "./dist/esm/shallow.js",
+      "import": "./dist/esm/shallow.mjs",
+      "default": "./dist/shallow.js"
     },
     "./context": {
-      "types": "./context.d.ts",
-      "module": "./esm/context.js",
-      "import": "./esm/context.mjs",
-      "default": "./context.js"
+      "types": "./dist/src/context.d.ts",
+      "module": "./dist/esm/context.js",
+      "import": "./dist/esm/context.mjs",
+      "default": "./dist/context.js"
     }
   },
   "sideEffects": false,
