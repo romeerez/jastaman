@@ -28,9 +28,16 @@ export const createStore = <
   const set: SetState<State> = (newState) => {
     if (typeof newState === 'function') newState = newState(state)
 
-    store.prevState = { ...state }
-    Object.assign(state, newState)
-    listeners.forEach((listener) => listener(state, store.prevState))
+    for (let key in newState) {
+      if (
+        newState[key as keyof typeof newState] !== state[key as keyof State]
+      ) {
+        store.prevState = { ...state }
+        Object.assign(state, newState)
+        listeners.forEach((listener) => listener(state, store.prevState))
+        return
+      }
+    }
   }
 
   const replace: ReplaceState<State> = (newState) => {

@@ -1,14 +1,14 @@
 import { createStore } from '../src/index'
 
 describe('subscribe()', () => {
-  it('should be called if new state identity is different', () => {
+  it('should not be called if new state is shallow equal to prev state', () => {
     const spy = jest.fn()
     const initialState = { value: 1, other: 'a' }
     const store = createStore({ state: initialState })
 
     store.subscribe(spy)
     store.set({ ...store.state })
-    expect(spy).toHaveBeenCalledWith(initialState, initialState)
+    expect(spy).not.toBeCalled()
   })
 
   it('should not be called when state slice is the same', () => {
@@ -37,7 +37,11 @@ describe('subscribe()', () => {
     const initialState = { value: 1, other: 'a' }
     const store = createStore({ state: initialState })
 
-    store.subscribe((state) => state, () => true, spy)
+    store.subscribe(
+      (state) => state,
+      () => true,
+      spy
+    )
     store.set({ value: initialState.value + 2 })
     expect(spy).not.toHaveBeenCalled()
   })
@@ -50,7 +54,7 @@ describe('subscribe()', () => {
     store.subscribe(
       (s) => s.value,
       () => false,
-      spy,
+      spy
     )
     store.set({ value: initialState.value + 2 })
     expect(spy).toHaveBeenCalledTimes(1)
