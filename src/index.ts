@@ -168,12 +168,12 @@ export const useCreateStore = <
   T extends StoreCreator,
   State extends T['state'] = T['state']
 >(
-  creator: () => Store<T>,
+  data: T,
   options?: {
     setOnChange?: Partial<State>
   }
 ) => {
-  const store = useMemo(creator, [])
+  const store = useMemo(() => createStore(data), [])
 
   useEffect(
     () => {
