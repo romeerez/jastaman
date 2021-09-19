@@ -56,9 +56,9 @@
     }
   },
   "vanilla.js": {
-    "bundled": 3713,
-    "minified": 1748,
-    "gzipped": 760,
+    "bundled": 3829,
+    "minified": 1790,
+    "gzipped": 777,
     "treeshaked": {
       "rollup": {
         "code": 37,
@@ -70,9 +70,9 @@
     }
   },
   "vanilla.mjs": {
-    "bundled": 3713,
-    "minified": 1748,
-    "gzipped": 760,
+    "bundled": 3829,
+    "minified": 1790,
+    "gzipped": 777,
     "treeshaked": {
       "rollup": {
         "code": 37,
@@ -84,9 +84,9 @@
     }
   },
   "index.js": {
-    "bundled": 6250,
-    "minified": 3055,
-    "gzipped": 1237,
+    "bundled": 6366,
+    "minified": 3097,
+    "gzipped": 1256,
     "treeshaked": {
       "rollup": {
         "code": 161,
@@ -98,9 +98,9 @@
     }
   },
   "index.mjs": {
-    "bundled": 6250,
-    "minified": 3055,
-    "gzipped": 1237,
+    "bundled": 6366,
+    "minified": 3097,
+    "gzipped": 1256,
     "treeshaked": {
       "rollup": {
         "code": 161,

@@ -2,6 +2,7 @@ import {
   DependencyList,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useReducer,
   useRef,
   useState,
@@ -162,11 +163,24 @@ export const createStore = <
 
   return store
 }
-//
-// export const useCreateStore = <T extends StoreCreator, State extends T['state'] = T['state']>(
-//   creator: () => Store<T>
-// ) => {
-//   const store = useMemo(creator, [])
-//
-//   return store
-// }
+
+export const useCreateStore = <
+  T extends StoreCreator,
+  State extends T['state'] = T['state']
+>(
+  creator: () => Store<T>,
+  options?: {
+    setOnChange?: Partial<State>
+  }
+) => {
+  const store = useMemo(creator, [])
+
+  useEffect(
+    () => {
+      if (options?.setOnChange) store.set(options.setOnChange)
+    },
+    options?.setOnChange ? Object.values(options.setOnChange) : []
+  )
+
+  return store
+}
