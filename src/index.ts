@@ -1,7 +1,22 @@
-import { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react'
-import { StoreApi, EqualityChecker, StoreCreator, Params } from './types'
-import { createStore as vanillaCreateStore } from './vanilla'
+import {
+  DependencyList,
+  useEffect,
+  useLayoutEffect,
+  useReducer,
+  useRef,
+  useState,
+} from 'react'
 import shallowEqual from './shallow'
+import {
+  EqualityChecker,
+  Params,
+  StateListener,
+  StateSelector,
+  StateSliceListener,
+  StoreApi,
+  StoreCreator,
+} from './types'
+import { createStore as vanillaCreateStore } from './vanilla'
 
 export * from './types'
 export { computed } from './vanilla'
@@ -12,8 +27,24 @@ export type Use<State extends object> = <Slice>(
   equalityFn?: EqualityChecker<Slice>
 ) => Slice
 
+export interface UseEffect<T extends object> {
+  (listener: StateListener<T>, deps?: DependencyList): void
+  <U>(
+    selector: StateSelector<T, U>,
+    listener: StateSliceListener<U>,
+    deps?: DependencyList
+  ): void
+  <U>(
+    selector: StateSelector<T, U>,
+    equalityFn: EqualityChecker<U>,
+    listener: StateSliceListener<U>,
+    deps?: DependencyList
+  ): void
+}
+
 export type Store<T extends StoreCreator> = StoreApi<T> & {
   use: Use<T['state']>
+  useEffect: UseEffect<T['state']>
 }
 
 // For server-side rendering: https://github.com/pmndrs/zustand/pull/34
@@ -25,14 +56,17 @@ const isSSR =
 
 const useIsomorphicLayoutEffect = isSSR ? useEffect : useLayoutEffect
 
-export const createStore = <T extends StoreCreator, State extends T['state'] = T['state']>(
+export const createStore = <
+  T extends StoreCreator,
+  State extends T['state'] = T['state']
+>(
   params: T & Params<T, State>
 ): Store<T> => {
   const store = vanillaCreateStore(params) as unknown as Store<T>
 
   store.use = (selector, deps = [], equalityFn = Object.is) => {
     const [, forceUpdate] = useReducer((c) => c + 1, 0)
-    const selectedState = useState(() => selector(store.state));
+    const selectedState = useState(() => selector(store.state))
     let selected = selectedState[0]
     const setSelected = selectedState[1]
     const { prevState } = store
@@ -50,7 +84,7 @@ export const createStore = <T extends StoreCreator, State extends T['state'] = T
           setSelected(selected)
         }
         return selected
-      }
+      },
     })
 
     refs.current.selector = selector
@@ -85,11 +119,54 @@ export const createStore = <T extends StoreCreator, State extends T['state'] = T
       }
 
       return store.subscribe(listener as any)
-    }, []);
+    }, [])
 
-    return selected;
+    return selected
   }
 
+  store.useEffect = <U>(
+    a: StateListener<T['state']> | StateSelector<T['state'], U>,
+    b?:
+      | StateListener<T['state']>
+      | StateSliceListener<U>
+      | EqualityChecker<U>
+      | DependencyList,
+    c?: StateSliceListener<U> | DependencyList,
+    d?: DependencyList
+  ) => {
+    const deps = d || (Array.isArray(c) && c) || (Array.isArray(b) && b) || []
+
+    useEffect(() => {
+      if (d || typeof c === 'function') {
+        const selector = a as StateSelector<T['state'], U>
+        const listener = c as StateSliceListener<U>
+        const slice = selector(store.state)
+        listener(slice, slice)
+
+        return store.subscribe(selector, b as EqualityChecker<U>, listener)
+      }
+
+      if (typeof b === 'function') {
+        const selector = a as StateSelector<T['state'], U>
+        const listener = b as StateSliceListener<U>
+        const slice = selector(store.state)
+        listener(slice, slice)
+
+        return store.subscribe(selector, listener)
+      }
+
+      a(store.state, store.state)
+      return store.subscribe(a)
+    }, deps)
+  }
 
   return store
 }
+//
+// export const useCreateStore = <T extends StoreCreator, State extends T['state'] = T['state']>(
+//   creator: () => Store<T>
+// ) => {
+//   const store = useMemo(creator, [])
+//
+//   return store
+// }

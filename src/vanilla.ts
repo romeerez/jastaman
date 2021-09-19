@@ -1,23 +1,25 @@
-import {
-  StoreCreator,
-  Params,
-  StoreApi,
-  StateListener,
-  StateSliceListener,
-  StateSelector,
-  SetState,
-  ReplaceState,
-  EqualityChecker,
-  Destroy,
-} from "./types"
-
 import shallowEqual from './shallow'
+import {
+  Destroy,
+  EqualityChecker,
+  Params,
+  ReplaceState,
+  SetState,
+  StateListener,
+  StateSelector,
+  StateSliceListener,
+  StoreApi,
+  StoreCreator,
+} from './types'
 
 export const computed = <T>(): T => {
   return undefined as unknown as T
 }
 
-export const createStore = <T extends StoreCreator, State extends T['state'] = T['state']>(
+export const createStore = <
+  T extends StoreCreator,
+  State extends T['state'] = T['state']
+>(
   params: Params<T, State>
 ): StoreApi<T, State> => {
   const state: State = { ...params.state }
@@ -27,15 +29,15 @@ export const createStore = <T extends StoreCreator, State extends T['state'] = T
     if (typeof newState === 'function') newState = newState(state)
 
     store.prevState = { ...state }
-    Object.assign(state, newState);
+    Object.assign(state, newState)
     listeners.forEach((listener) => listener(state, store.prevState))
   }
 
   const replace: ReplaceState<State> = (newState) => {
-    if (typeof newState === 'function') newState = newState(state);
+    if (typeof newState === 'function') newState = newState(state)
 
     for (const key in state) {
-      delete state[key];
+      delete state[key]
     }
 
     set(newState)
@@ -61,14 +63,17 @@ export const createStore = <T extends StoreCreator, State extends T['state'] = T
 
   const subscribe = <U>(
     listenerOrSelector: StateListener<State> | StateSelector<State, U>,
-    listenerOrEqualityFn?: StateListener<State> | StateSliceListener<U> | EqualityChecker<U>,
+    listenerOrEqualityFn?:
+      | StateListener<State>
+      | StateSliceListener<U>
+      | EqualityChecker<U>,
     sliceListener?: StateSliceListener<U>
   ) => {
     if (sliceListener) {
       return subscribeWithSelector(
         listenerOrSelector as StateSelector<State, U>,
         listenerOrEqualityFn as EqualityChecker<U>,
-        sliceListener,
+        sliceListener
       )
     }
 
@@ -76,7 +81,7 @@ export const createStore = <T extends StoreCreator, State extends T['state'] = T
       return subscribeWithSelector(
         listenerOrSelector as StateSelector<State, U>,
         Object.is,
-        listenerOrEqualityFn as StateSliceListener<U>,
+        listenerOrEqualityFn as StateSliceListener<U>
       )
     }
 
@@ -85,14 +90,14 @@ export const createStore = <T extends StoreCreator, State extends T['state'] = T
   }
 
   const destroy: Destroy = () => listeners.clear()
-  
+
   const { computed } = params
   for (let key in computed) {
     const [selector, computor] = computed[key] as [
       (state: State, prevState: State) => unknown,
       (state: State, prevState: State) => State[typeof key]
     ]
-    
+
     let prevSelected = computor(state, state)
     state[key] = prevSelected
     const listener = (state: State, prevState: State) => {
@@ -102,7 +107,7 @@ export const createStore = <T extends StoreCreator, State extends T['state'] = T
         state[key] = computor(state, prevState)
       }
     }
-    
+
     listeners.add(listener)
   }
 
@@ -113,8 +118,8 @@ export const createStore = <T extends StoreCreator, State extends T['state'] = T
     set,
     replace,
     subscribe,
-    destroy
+    destroy,
   }
-  
+
   return store
 }

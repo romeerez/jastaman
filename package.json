@@ -1,10 +1,12 @@
 {
   "name": "jastaman",
-  "version": "0.0.5",
+  "version": "0.0.11",
   "description": "React state manager",
   "main": "./dist/index.js",
   "types": "./dist/src/index.d.ts",
-  "files": ["./dist"],
+  "files": [
+    "**"
+  ],
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
@@ -39,7 +41,6 @@
     "build:vanilla": "rollup -c --config-vanilla",
     "build:shallow": "rollup -c --config-shallow",
     "build:context": "rollup -c --config-context",
-    "postbuild": "npm run copy",
     "eslint": "eslint --fix '*.{js,json}' '{src,tests}/**/*.{ts,tsx}'",
     "eslint:ci": "eslint '*.{js,json}' '{src,tests}/**/*.{ts,tsx}'",
     "prepare": "npm run build",
@@ -125,7 +126,6 @@
     "eslint-plugin-jest": "^24.4.0",
     "eslint-plugin-prettier": "^3.4.1",
     "eslint-plugin-react": "^7.24.0",
-    "eslint-plugin-react-hooks": "^4.2.0",
     "husky": "^7.0.2",
     "immer": "^9.0.5",
     "jest": "^27.0.6",
