@@ -23,11 +23,15 @@ import { createStore as vanillaCreateStore } from './vanilla'
 export * from './types'
 export { computed } from './vanilla'
 
-export type Use<State extends object> = <Slice>(
-  selector: (state: State) => Slice,
-  deps?: ReadonlyArray<any>,
-  equalityFn?: EqualityChecker<Slice>
-) => Slice
+export interface Use<State extends object> {
+  <Slice>(
+    selector: (state: State) => Slice,
+    deps?: DependencyList,
+    equalityFn?: EqualityChecker<Slice>
+  ): Slice
+  <Key extends keyof State>(key: Key): State[Key]
+  <Key extends keyof State>(...keys: Key[]): Pick<State, Key>
+}
 
 export interface UseEffect<T extends object> {
   (listener: StateListener<T>, deps?: DependencyList): void
@@ -66,7 +70,35 @@ export const createStore = <
 ): Store<T> => {
   const store = vanillaCreateStore(params) as unknown as Store<T>
 
-  store.use = (selector, deps = [], equalityFn = Object.is) => {
+  store.use = (...args: any[]): any => {
+    if (typeof args[0] === 'string') {
+      const { length } = args
+      if (length === 1) {
+        return use((state) => state[args[0] as keyof T['state']], args)
+      }
+
+      return use(
+        (state) => {
+          const slice: Partial<T['state']> = {}
+          for (let i = 0; i < length; i++) {
+            slice[args[i] as keyof T['state']] =
+              state[args[i] as keyof T['state']]
+          }
+          return slice
+        },
+        args,
+        shallowEqual
+      )
+    }
+
+    return use(args[0], args[1], args[2])
+  }
+
+  const use = <Slice>(
+    selector: (state: T['state']) => Slice,
+    deps: DependencyList = [],
+    equalityFn: EqualityChecker<Slice> = Object.is
+  ) => {
     const [, forceUpdate] = useReducer((c) => c + 1, 0)
     const selectedState = useState(() => selector(store.state))
     let selected = selectedState[0]

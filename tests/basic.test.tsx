@@ -6,18 +6,58 @@ import {
 } from 'react'
 import { act, fireEvent, render } from '@testing-library/react'
 import ReactDOM from 'react-dom'
-import { createStore, EqualityChecker, StateSelector, SetState } from '../src/index'
+import {
+  EqualityChecker,
+  SetState,
+  StateSelector,
+  createStore,
+} from '../src/index'
+
+it('supports use with state keys', async () => {
+  const store = createStore({
+    state: {
+      a: 1,
+      b: 2,
+      c: 3,
+      d: 4,
+    },
+  })
+
+  const Component = () => {
+    const a = store.use('a')
+    const b = store.use('b')
+    const { c, d } = store.use('c', 'd')
+
+    return (
+      <div>
+        {a} {b} {c} {d}
+      </div>
+    )
+  }
+
+  const { findByText } = render(<Component />)
+  await findByText('1 2 3 4')
+
+  act(() => store.set({ a: 0 }))
+  await findByText('0 2 3 4')
+
+  act(() => store.set({ c: 0 }))
+  await findByText('0 2 0 4')
+
+  act(() => store.set({ d: 0 }))
+  await findByText('0 2 0 0')
+})
 
 it('uses the store', async () => {
   const store = createStore({
     state: {
       count: 0,
     },
-    inc: () => store.set((state) => ({ count: state.count + 1 }))
+    inc: () => store.set((state) => ({ count: state.count + 1 })),
   })
 
   function Counter() {
-    const count = store.use(state => state.count)
+    const count = store.use((state) => state.count)
     useEffect(store.inc, [])
     return <div>count: {count}</div>
   }
@@ -61,9 +101,9 @@ it('uses the store with a selector and equality checker', async () => {
 it('only re-renders if selected state has changed', async () => {
   const store = createStore({
     state: {
-      count: 0
+      count: 0,
     },
-    inc: () => store.set((state) => ({ count: state.count + 1 }))
+    inc: () => store.set((state) => ({ count: state.count + 1 })),
   })
   let counterRenderCount = 0
   let controlRenderCount = 0
@@ -98,7 +138,7 @@ it('re-renders with useLayoutEffect', async () => {
   const store = createStore({ state: { state: false } })
 
   function Component() {
-    const state = store.use(state => state.state)
+    const state = store.use((state) => state.state)
     useLayoutEffect(() => {
       store.set({ state: true })
     }, [])
@@ -122,7 +162,7 @@ it('can batch updates', async () => {
   })
 
   function Counter() {
-    const count = store.use(state => state.count)
+    const count = store.use((state) => state.count)
     useEffect(() => {
       ReactDOM.unstable_batchedUpdates(() => {
         store.inc()
@@ -144,7 +184,7 @@ it('can update the selector', async () => {
     state: {
       one: 'one',
       two: 'two',
-    }
+    },
   })
 
   function Component({ selector }: Props) {
@@ -208,12 +248,14 @@ it('can call store.use with progressively more arguments', async () => {
     return (
       <div>
         renderCount: {++renderCount}, value: {JSON.stringify(value)}
-    </div>
-  )
+      </div>
+    )
   }
 
   // Render with selector.
-  const { findByText, rerender } = render(<Component selector={(s) => s.value} />)
+  const { findByText, rerender } = render(
+    <Component selector={(s) => s.value} />
+  )
   await findByText('renderCount: 1, value: 0')
 
   // Render with selector and equality checker.
@@ -350,9 +392,11 @@ it('can set the state', () => {
 })
 
 it('can set the store without merging', () => {
-  const { replace, state } = createStore<{ state: { a?: number, b?: number } }>({
-    state: { a: 1 },
-  })
+  const { replace, state } = createStore<{ state: { a?: number; b?: number } }>(
+    {
+      state: { a: 1 },
+    }
+  )
 
   // Should override the state instead of merging.
   replace({ b: 2 })
@@ -363,7 +407,7 @@ it('can destroy the store', () => {
   const store = createStore({
     state: {
       value: 1,
-    }
+    },
   })
 
   store.subscribe(() => {
@@ -422,7 +466,7 @@ it('ensures parent components subscribe before children', async () => {
         '1': { text: 'child 1' },
         '2': { text: 'child 2' },
       },
-    }
+    },
   })
 
   function changeState() {
@@ -483,7 +527,7 @@ it('ensures the correct subscriber is removed on unmount', async () => {
     return (
       <>
         <Counter />
-      <Count />
+        <Count />
       </>
     )
   }
