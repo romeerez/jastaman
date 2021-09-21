@@ -5,7 +5,7 @@ Just another state manager for React
 Main goal is to create as concise library as possible
 
 Inspired by [Zustand](https://github.com/pmndrs/zustand) and has similar API.
-Jastaman passes the same tests, has the same possibilities and more, performs faster.
+Jastaman passes the same tests, has the same possibilities except middleware yet, performs faster.
 
 ## Table of Contents
 * [Basic usage](#basic-usage)
