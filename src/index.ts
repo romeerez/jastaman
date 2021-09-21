@@ -100,49 +100,45 @@ export const createStore = <
     equalityFn: EqualityChecker<Slice> = Object.is
   ) => {
     const [, forceUpdate] = useReducer((c) => c + 1, 0)
-    const selectedState = useState(() => selector(store.state))
-    let selected = selectedState[0]
-    const setSelected = selectedState[1]
     const { prevState } = store
 
-    const refs = useRef({
+    const [refs] = useState(() => ({
       deps,
       selector,
       equalityFn,
-      selected,
+      selected: selector(store.state),
       error: false,
-      listener(state: State) {
-        const selected = refs.current.selector(state)
-        if (!refs.current.equalityFn(refs.current.selected, selected)) {
-          refs.current.selected = selected
-          setSelected(selected)
+      listener(state: State): true | undefined {
+        const selected = refs.selector(state)
+        if (!refs.equalityFn(refs.selected, selected)) {
+          refs.selected = selected
+          return true
         }
-        return selected
       },
-    })
+    }))
 
-    refs.current.selector = selector
-    refs.current.equalityFn = equalityFn
+    refs.selector = selector
+    refs.equalityFn = equalityFn
 
-    if (!shallowEqual(refs.current.deps, deps)) {
-      refs.current.deps = deps
-      selected = refs.current.listener(store.state as any)
+    if (!shallowEqual(refs.deps, deps)) {
+      refs.deps = deps
+      refs.listener(store.state as any)
     }
 
     // re-run listener in render if error happened in the subscriber.
-    if (refs.current.error) {
-      refs.current.error = false
-      selected = refs.current.listener(store.state as any)
+    if (refs.error) {
+      refs.error = false
+      refs.listener(store.state as any)
     }
-
-    refs.current.selected = selected
 
     useIsomorphicLayoutEffect(() => {
       const listener = (state: State) => {
         try {
-          refs.current.listener(state)
+          if (refs.listener(state)) {
+            forceUpdate()
+          }
         } catch (_) {
-          refs.current.error = true
+          refs.error = true
           forceUpdate()
         }
       }
@@ -155,7 +151,7 @@ export const createStore = <
       return store.subscribe(listener as any)
     }, [])
 
-    return selected
+    return refs.selected
   }
 
   store.useEffect = <U>(
