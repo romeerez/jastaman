@@ -4,8 +4,6 @@ import {
   useLayoutEffect,
   useMemo,
   useReducer,
-  useRef,
-  useState,
 } from 'react'
 import shallowEqual from './shallow'
 import {

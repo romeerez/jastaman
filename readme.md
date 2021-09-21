@@ -17,6 +17,13 @@ Jastaman passes the same tests, has the same possibilities except middleware yet
   - [Computed fields](#computed-derived-fields)
   - [Store instance API](#store-instance-api)
     * [store.use](#storeuse)
+    * [store.state](#storestate)
+    * [store.prevState](#storeprevstate)
+    * [store.set](#storeset)
+    * [store.replace](#storereplace)
+    * [store.subscribe](#storesubscribe)
+    * [store.destroy](#storedestroy)
+    * [store.useEffect](#storeuseeffect)
 - [Middleware: immer, persist](#middleware)
 - [Performance](#performance)
 
