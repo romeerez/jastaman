@@ -1,6 +1,6 @@
 # Jastaman
 
-Just Another STAte MANager for React!
+Just another state manager for React
 
 Main goal is to create as concise library as possible
 
