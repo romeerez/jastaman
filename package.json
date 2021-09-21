@@ -1,6 +1,6 @@
 {
   "name": "jastaman",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "description": "React state manager",
   "main": "./dist/index.js",
   "types": "./dist/src/index.d.ts",

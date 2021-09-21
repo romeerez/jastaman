@@ -99,46 +99,59 @@ export const createStore = <
     deps: DependencyList = [],
     equalityFn: EqualityChecker<Slice> = Object.is
   ) => {
-    const [, forceUpdate] = useReducer((c) => c + 1, 0)
-    const { prevState } = store
-
-    const [refs] = useState(() => ({
-      deps,
-      selector,
-      equalityFn,
-      selected: selector(store.state),
-      error: false,
-      listener(state: State): true | undefined {
-        const selected = refs.selector(state)
-        if (!refs.equalityFn(refs.selected, selected)) {
-          refs.selected = selected
-          return true
+    const [ref, forceUpdate] = useReducer(
+      (refs) => ({ current: refs.current }),
+      undefined as unknown as {
+        current: {
+          deps: DependencyList
+          selector: (state: T['state']) => Slice
+          equalityFn: EqualityChecker<Slice>
+          selected: Slice
+          error: boolean
+          listener(state: State): true | undefined
         }
       },
-    }))
+      () => ({
+        current: {
+          deps,
+          selector,
+          equalityFn,
+          selected: selector(store.state),
+          error: false,
+          listener(state: State): true | undefined {
+            const selected = ref.current.selector(state)
+            if (!ref.current.equalityFn(ref.current.selected, selected)) {
+              ref.current.selected = selected
+              return true
+            }
+          },
+        },
+      })
+    )
 
-    refs.selector = selector
-    refs.equalityFn = equalityFn
+    ref.current.selector = selector
+    ref.current.equalityFn = equalityFn
 
-    if (!shallowEqual(refs.deps, deps)) {
-      refs.deps = deps
-      refs.listener(store.state as any)
+    if (!shallowEqual(ref.current.deps, deps)) {
+      ref.current.deps = deps
+      ref.current.listener(store.state as any)
     }
 
     // re-run listener in render if error happened in the subscriber.
-    if (refs.error) {
-      refs.error = false
-      refs.listener(store.state as any)
+    if (ref.current.error) {
+      ref.current.error = false
+      ref.current.listener(store.state as any)
     }
 
+    const { prevState } = store
     useIsomorphicLayoutEffect(() => {
       const listener = (state: State) => {
         try {
-          if (refs.listener(state)) {
+          if (ref.current.listener(state)) {
             forceUpdate()
           }
         } catch (_) {
-          refs.error = true
+          ref.current.error = true
           forceUpdate()
         }
       }
@@ -151,7 +164,7 @@ export const createStore = <
       return store.subscribe(listener as any)
     }, [])
 
-    return refs.selected
+    return ref.current.selected
   }
 
   store.useEffect = <U>(
