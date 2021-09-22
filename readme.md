@@ -76,7 +76,7 @@ function Controls() {
   return (
     <>
       <button onClick={store.addPenguin}>add penguin</button>
-      <button onClick={store.addLama}>add penguin</button>
+      <button onClick={store.addLama}>add lama</button>
     </>
   )
 }
@@ -317,7 +317,7 @@ Third argument is to check if selected value was changed, by default it is `Obje
 Use it to return array or object from `use`:
 
 ```tsx
-import shallowEqual from 'jastaman/shallow'
+import { shallowEqual } from 'jastaman'
 
 const Component = ({ id }: { id: number }) => {
   // return array
@@ -441,7 +441,7 @@ With 3 arguments first is selector, second is equality function and third is lis
 By default equality function is `Object.is`, which is almost identical to `===`
 
 ```ts
-import shallowEqual from 'jastaman/shallow'
+import { shallowEqual } from 'jastaman'
 
 store.subscribe(selector, shallowEqual, (slice, prevSlice) => {})
 ```
@@ -458,7 +458,7 @@ It can be used if you want to update state of one store based on state of anothe
 
 ```ts
 import { useCreateStore } from 'jastaman'
-import shallowEqual from 'jastaman/shallow'
+import { shallowEqual } from 'jastaman'
 
 const Component = () => {
   const store = useCreateStore(() => ({

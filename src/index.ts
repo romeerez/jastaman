@@ -20,6 +20,7 @@ import { createStore as vanillaCreateStore } from './vanilla'
 
 export * from './types'
 export { computed } from './vanilla'
+export { shallowEqual }
 
 export interface Use<State extends object> {
   <Slice>(
